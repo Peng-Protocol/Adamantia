@@ -6,6 +6,11 @@ while the app isn't in the foreground. It's aimed at people who have a
 self-contained HTML/JS tool and want to run it on a phone with persistent
 execution, without building a full native app.
 
+Today it's single-file: it loads one HTML file at a time and only
+remembers the last one you opened. A multi-tab redesign is in progress
+(multiple simultaneously-loaded HTML files, each an independent tab with
+its own background task and notification) — see **Development** below.
+
 ## What it does
 
 - Opens a file picker on first launch so you can select a local `.html`
@@ -13,7 +18,8 @@ execution, without building a full native app.
 - Loads that file into a full-screen WebView (JavaScript, DOM storage,
   and local file access are all enabled).
 - Remembers the last file you opened and reloads it automatically the
-  next time you start the app.
+  next time you start the app. There's currently no in-app tab list —
+  only the single most-recently-opened file is restored.
 - Exposes a small JavaScript bridge (`AndroidBackground`) so the page you
   loaded can start or stop an Android foreground service that keeps
   running in the background.
@@ -74,22 +80,32 @@ customize the loop in `MyBackgroundService.kt` to do the work you need.
 
 ### Permissions
 
-The app requests:
+The app declares:
 
 - **Internet** — for the WebView and any network calls your HTML page
   makes.
 - **Foreground service / data sync** — required by Android to keep the
   background task alive and visible to the user via a notification.
 - **Post notifications** — required on Android 13+ to show the
-  foreground service notification.
-- **Read external storage** — only used on Android 12 and below; newer
-  versions rely on the file picker's persistable URI permission instead.
+  foreground service notification. ⚠️ The app currently only *declares*
+  this permission in the manifest; it never requests it at runtime. On
+  Android 13+ that means the "Adamantia Active" notification can
+  silently fail to appear the first time a background task starts,
+  with no prompt and no error — the user has to grant it manually via
+  Settings → Apps → Adamantia → Notifications. Requesting it properly
+  (e.g. via `ActivityResultContracts.RequestPermission`) is an open fix.
+- **Read external storage** — declared for API 32 and below, but
+  nothing in the codebase reads raw external storage paths (no
+  `Environment`/`MediaStore`/`File` access outside the app's own
+  sandbox). File access goes entirely through the SAF file picker and
+  persisted URI grants, which don't need this permission on any API
+  level — it looks unused and may be safe to drop.
 
 ## Project structure
 
 ```
 app/src/main/java/com/peng/adamantia/
-  MainActivity.kt          # WebView host, file picker, tab persistence
+  MainActivity.kt          # WebView host, file picker, last-opened-file persistence
   WebAppInterface.kt        # JS bridge exposed as `AndroidBackground`
   MyBackgroundService.kt    # Foreground service for background work
   spike/SpikeActivity.kt    # Dev-only test harness, see Development below
