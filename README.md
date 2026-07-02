@@ -92,9 +92,38 @@ app/src/main/java/com/peng/adamantia/
   MainActivity.kt          # WebView host, file picker, tab persistence
   WebAppInterface.kt        # JS bridge exposed as `AndroidBackground`
   MyBackgroundService.kt    # Foreground service for background work
+  spike/SpikeActivity.kt    # Dev-only test harness, see Development below
 app/src/main/AndroidManifest.xml
 .github/workflows/build.yml # CI: builds the debug APK on every push
 ```
+
+## Development
+
+Adamantia is being extended into a multi-tab browser (multiple loaded
+HTML files, each with its own independent background task and
+notification). `spike/SpikeActivity.kt` is a throwaway test harness used
+to validate risky assumptions on a real device before building the full
+feature — it has no launcher icon and isn't part of the app's normal UI.
+
+To run it:
+
+```bash
+adb shell am start -n com.peng.adamantia/.spike.SpikeActivity
+adb logcat -s AdamantiaSpike
+```
+
+It loads two WebViews (one hidden via `View.GONE`) that each log a tick
+every 2 seconds, plus a button to check whether both WebView instances
+share `localStorage` for the same `file://` URL. This answers two
+questions the multi-tab design depends on:
+
+1. Does a hidden-but-attached WebView keep running its JavaScript while
+   the app is foregrounded?
+2. Do two tabs loading the same local HTML file share browser storage?
+
+Delete `spike/SpikeActivity.kt` and its manifest entry once the
+multi-tab feature is built and these questions are answered — it isn't
+meant to ship long-term.
 
 ## Notes for customization
 
