@@ -1,4 +1,4 @@
-package com.example.everwinter
+package com.peng.adamantia
 
 import android.app.*
 import android.content.Intent
@@ -37,7 +37,7 @@ class MyBackgroundService : Service() {
         serviceScope.launch {
             while (isActive) {
                 // Logic specified: "fetching data executing positions"
-                println("EverWinter: Executing background data sync...")
+                println("Adamantia: Executing background data sync...")
                 delay(60000) // Run every minute
             }
         }
