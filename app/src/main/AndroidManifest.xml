@@ -31,6 +31,13 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- Phase 0 spike, throwaway: no launcher intent-filter, launch via
+             `adb shell am start -n com.peng.adamantia/.spike.SpikeActivity` -->
+        <activity
+            android:name=".spike.SpikeActivity"
+            android:exported="true"
+            android:label="Adamantia Spike" />
     </application>
 
 </manifest>
